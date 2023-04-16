@@ -1,5 +1,4 @@
 #include <SFML/Graphics.hpp>
-#include <iostream>
 
 // Make it easier to type with. Typically don't like this but for now we use it. 
 using namespace sf;
@@ -7,12 +6,62 @@ using namespace sf;
 // Game starts
 int main()
 {
-	std::cout << "Test!" << std::endl;
 	// Create a video mode object
 	VideoMode vm(1920, 1080);
 
 	// Create and open a window for the game
 	RenderWindow window(vm, "Timber!!!", Style::Fullscreen);
+
+	// Create a texture to hold a graphic on the GPU
+	Texture textureBackground;
+
+	// Load a graphic into the texture
+	textureBackground.loadFromFile("graphics/background.png");
+
+	// Create a sprite
+	Sprite spriteBackground;
+
+	// Attach the texture to the sprite
+	spriteBackground.setTexture(textureBackground);
+
+	// Set the spriteBackground to cover the screen
+	spriteBackground.setPosition(0, 0);
+
+	while(window.isOpen())
+	{
+		/*
+		***************************
+		Handle the player input
+		***************************
+		*/
+		if(Keyboard::isKeyPressed(Keyboard::Escape))
+		{
+			window.close();
+		}
+
+		/*
+		***************************
+		Update the Scene
+		***************************
+		*/
+
+
+		/*
+		***************************
+		Draw the Scene
+		***************************
+		*/
+		// Clear everything from the last frame
+		window.clear(); 
+
+		// Draw our game scene here
+		window.draw(spriteBackground);
+
+		// Show everything we just drew
+		window.display();
+
+		
+	}
 
 	return 0;
 }
