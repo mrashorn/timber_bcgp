@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/WindowStyle.hpp>
+#include <SFML/Audio.hpp>
 #include <sstream>
 
 // Make it easier to type with. Typically don't like this but for now we use it. 
@@ -201,6 +202,25 @@ int main()
 	// Control the player input
 	bool acceptInput = false;
 
+	// Prepare the sounds
+	// the player chopping sound
+	SoundBuffer chopBuffer;
+	chopBuffer.loadFromFile("sound/chop.wav");
+	Sound chop;
+	chop.setBuffer(chopBuffer);
+
+	// the player has met his end under a branch
+	SoundBuffer deathBuffer;
+	deathBuffer.loadFromFile("sound/death.wav");
+	Sound death;
+	death.setBuffer(deathBuffer);
+
+	// Out of time
+	SoundBuffer ootBuffer;
+	ootBuffer.loadFromFile("sound/out_of_time.wav");
+	Sound outOfTime;
+	outOfTime.setBuffer(ootBuffer);
+
 
 	while(window.isOpen())
 	{
@@ -209,6 +229,21 @@ int main()
 		Handle the player input
 		***************************
 		*/
+		
+		Event event;
+
+		while (window.pollEvent(event))
+		{
+			if (event.type == Event::KeyReleased && !paused)
+			{
+				// Listen for the key presses again
+				acceptInput = true;
+
+				// hide the axe
+				spriteAxe.setPosition(2000, spriteAxe.getPosition().y);
+			}
+		}
+
 		if(Keyboard::isKeyPressed(Keyboard::Escape))
 		{
 			window.close();
@@ -263,10 +298,39 @@ int main()
 				logActive = true;
 
 				acceptInput = false;
+				
+				// Play the chop sound
+				chop.play();
 			}
 
-			// Left off here!
 			// Handle the left cursor key
+			if (Keyboard::isKeyPressed(Keyboard::Left))
+			{
+				// Make sure the player is on the left
+				playerSide = side::LEFT;
+
+				score++;
+
+				// Add to the amount of time remaining
+				timeRemaining += (2/score) + .15;
+
+				spriteAxe.setPosition(AXE_POSITION_LEFT, spriteAxe.getPosition().y);
+
+				spritePlayer.setPosition(580, 720);
+
+				// update the branches
+				updateBranches(score);
+
+				// set the log flying
+				spriteLog.setPosition(810, 720);
+				logSpeedX = 5000;
+				logActive = true;
+
+				acceptInput = false;
+				
+				// Add the chop sound
+				chop.play();
+			}
 
 		}
 
@@ -300,6 +364,9 @@ int main()
 				messageText.setOrigin(textRect.left + textRect.width / 2.0f,
 						textRect.top + textRect.height / 2.0f);
 				messageText.setPosition(1920 / 2.0f, 1080 / 2.0f);
+
+				// Play the out of time sound
+				outOfTime.play();
 
 
 			}
@@ -419,7 +486,7 @@ int main()
 			ss<< "Score = " << score;
 			scoreText.setString(ss.str());
 
-			// Update the Branch sprites
+			// Update the branch sprites
 			for( int i = 0; i < NUM_BRANCHES; i++)
 			{
 				float height = i * 150;
@@ -445,6 +512,49 @@ int main()
 					// Hide the branch
 					branches[i].setPosition(3000, height);
 				}
+			}
+
+			// Handle a flying log
+			if (logActive)
+			{
+				spriteLog.setPosition(spriteLog.getPosition().x + (logSpeedX * dt.asSeconds()),
+						spriteLog.getPosition().y + (logSpeedY * dt.asSeconds()));
+				
+				// Has the log reached the edge of the screen?
+				if (spriteLog.getPosition().x < -100 || spriteLog.getPosition().x > 2000)
+				{
+					// Set it up ready to be a whole new log next frame
+					logActive = false;
+					spriteLog.setPosition(810, 720);
+				}
+			}
+
+			// Has the player been squashed by a branch?
+			if (branchPositions[5] == playerSide)
+			{
+				// death
+				paused = true;
+				acceptInput = false;
+				
+				// Draw the gravestone
+				spriteRIP.setPosition(525, 750);
+
+				// hide the player
+				spritePlayer.setPosition(2000, 660);
+
+				// Change the text of the message
+				messageText.setString("Squished!");
+
+				// Center it on screen
+				FloatRect textRect = messageText.getLocalBounds();
+
+				messageText.setOrigin(textRect.left + textRect.width / 2.0f, 
+						textRect.top + textRect.height / 2.0f);
+
+				messageText.setPosition(1920 / 2.0f, 1080 / 2.0f);
+
+				// Play the death sound
+				death.play();
 			}
 		} // End if (!paused)
 
