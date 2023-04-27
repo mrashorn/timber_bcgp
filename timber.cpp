@@ -17,6 +17,9 @@ Sprite branches[NUM_BRANCHES];
 enum class side { LEFT, RIGHT, NONE };
 side branchPositions[NUM_BRANCHES];
 
+int old_score = -1;
+int counter = 0;
+
 // Game starts
 int main()
 {
@@ -47,6 +50,20 @@ int main()
 	Sprite spriteTree;
 	spriteTree.setTexture(textureTree);
 	spriteTree.setPosition(810, 0);
+
+	// Make more trees
+	Sprite spriteTree2;
+	spriteTree2.setTexture(textureTree);
+	spriteTree2.setPosition(300, 0);
+	spriteTree2.scale(.4, .8);
+	Sprite spriteTree3;
+	spriteTree3.setTexture(textureTree);
+	spriteTree3.setPosition(1200, 0);
+	spriteTree3.scale(.3, .8);
+	Sprite spriteTree4;
+	spriteTree4.setTexture(textureTree);
+	spriteTree4.setPosition(1400, 0);
+	spriteTree4.scale(.4, .75);
 
 	// Prepare the bee
 	Texture textureBee;
@@ -113,6 +130,7 @@ int main()
 
 	Text messageText;
 	Text scoreText;
+	Text framerateText;
 
 	// We need to choose a font
 	Font font;
@@ -121,18 +139,22 @@ int main()
 	// Set the font to our message
 	messageText.setFont(font);
 	scoreText.setFont(font);
+	framerateText.setFont(font);
 	
 	// Assign the actual message
 	messageText.setString("Press Enter to start!");
 	scoreText.setString("Score = 0");
+	framerateText.setString("Frame Rate: 0");
 
 	// Make it really big 
 	messageText.setCharacterSize(75);
 	scoreText.setCharacterSize(100);
+	framerateText.setCharacterSize(100);
 
 	// Choose a color
 	messageText.setFillColor(Color::White);
 	scoreText.setFillColor(Color::White);
+	framerateText.setFillColor(Color::White);
 
 	// Position the text
 	FloatRect textRect = messageText.getLocalBounds();
@@ -143,6 +165,19 @@ int main()
 	messageText.setPosition(1920 / 2.0f, 1080 / 2.0f);
 
 	scoreText.setPosition(20, 20);
+	framerateText.setPosition(1100, 20);
+
+	// Build the box around the score
+	RectangleShape scoreBox;
+	scoreBox.setSize({scoreText.getLocalBounds().width+20, scoreText.getLocalBounds().height+20});
+	scoreBox.setPosition(10, 25);
+	scoreBox.setFillColor(Color(0,0,0, 100));
+
+	// Build the box around the frame rate
+	RectangleShape framerateBox;
+	framerateBox.setSize({framerateText.getLocalBounds().width+80, framerateText.getLocalBounds().height+20});
+	framerateBox.setPosition(1080, 25);
+	framerateBox.setFillColor(Color(0,0,0, 100));
 
 	// Prepare 6 branches
 	Texture textureBranch;
@@ -344,6 +379,7 @@ int main()
 		{
 			// Measure Time
 			Time dt = clock.restart();
+			int frame_rate = 1/dt.asSeconds();
 
 			// Subtract from the amount of time remaining
 			timeRemaining -= dt.asSeconds();
@@ -482,9 +518,21 @@ int main()
 			}
 
 			// Update the Score text
-			std::stringstream ss;
-			ss<< "Score = " << score;
-			scoreText.setString(ss.str());
+			if(score != old_score)
+			{
+				std::stringstream ss;
+				ss<< "Score = " << score;
+				scoreText.setString(ss.str());
+			
+			}
+			// Update the frame rate text
+			if (counter % 25 == 0)
+			{
+				std::stringstream frss;
+				frss << "Frame Rate: " << frame_rate;
+				framerateText.setString(frss.str());
+			}
+			
 
 			// Update the branch sprites
 			for( int i = 0; i < NUM_BRANCHES; i++)
@@ -569,10 +617,13 @@ int main()
 		// Draw our game scene here
 		window.draw(spriteBackground);
 
-		// Draw the clouds
+		// Draw the clouds and other trees
 		window.draw(spriteCloud1);
 		window.draw(spriteCloud2);
+		window.draw(spriteTree2);
 		window.draw(spriteCloud3);
+		window.draw(spriteTree3);
+		window.draw(spriteTree4);
 
 		// Draw the branches
 		for (int i = 0; i < NUM_BRANCHES; i++)
@@ -598,8 +649,17 @@ int main()
 		// Draw the insect
 		window.draw(spriteBee);
 
+		// Draw the score box
+		window.draw(scoreBox);
+
 		// Draw the score
 		window.draw(scoreText);
+
+		// Draw the frame rate box
+		window.draw(framerateBox);
+
+		// Draw the frame rate
+		window.draw(framerateText);
 
 		// Draw the timebar
 		window.draw(timeBar);
@@ -613,6 +673,8 @@ int main()
 		window.display();
 
 		
+		old_score = score;
+		counter++;
 	}
 
 	return 0;
